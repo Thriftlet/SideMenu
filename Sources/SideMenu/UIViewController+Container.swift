@@ -14,10 +14,11 @@ extension UIViewController {
         guard let viewController = viewController else {
             return
         }
+        
+        let parentViewController = view.parentViewController ?? self
 
         // `willMoveToParentViewController:` is called automatically when adding
-
-        addChild(viewController)
+        parentViewController.addChild(viewController)
 
         viewController.view.frame = view.bounds
         viewController.view.translatesAutoresizingMaskIntoConstraints = true
@@ -25,7 +26,7 @@ extension UIViewController {
 
         view.addSubview(viewController.view)
 
-        viewController.didMove(toParent: self)
+        viewController.didMove(toParent: parentViewController)
     }
 
     func unload(_ viewController: UIViewController?) {

@@ -112,13 +112,16 @@ extension SideMenuController {
             public var shouldUseContentSupportedOrientations: Bool = false
 
             /// The supported orientations of side menu controller. Default is `.portrait`.
-            public var supportedOrientations: UIInterfaceOrientationMask = .allButUpsideDown
+            public var supportedOrientations: UIInterfaceOrientationMask = .portrait
             
             /// The side menu shouldAutorotate. Default is `true`.
             public var shouldAutorotate: Bool = true
             
             /// The sensitivity of pan pan gesture recognizer
             public var panGestureSensitivity: CGFloat = 0.25
+            
+            /// If enabled, adds menu view as a subview of tab bar controller view if possible
+            public var addToTabBarController: Bool = false
         }
 
         /// The basic configuration of side menu

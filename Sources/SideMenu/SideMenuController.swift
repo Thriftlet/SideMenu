@@ -118,6 +118,8 @@ open class SideMenuController: UIViewController {
 
     // The pan gesture recognizer responsible for revealing and hiding side menu
     private weak var panGestureRecognizer: UIPanGestureRecognizer?
+    private weak var menuPanGestureRecognizer: UIPanGestureRecognizer?
+    private weak var overlayPanGestureRecognizer: UIPanGestureRecognizer?
 
     var shouldReverseDirection: Bool {
         guard preferences.basic.shouldRespectLanguageDirection else {
@@ -174,11 +176,13 @@ open class SideMenuController: UIViewController {
 
         resolveDirection(with: contentContainerView)
 
-        menuContainerView.frame = sideMenuFrame(visibility: false)
-        view.addSubview(menuContainerView)
-
         load(contentViewController, on: contentContainerView)
-        load(menuViewController, on: menuContainerView)
+        
+        menuContainerView.frame = sideMenuFrame(visibility: false)
+        if !preferences.basic.addToTabBarController {
+            view.addSubview(menuContainerView)
+            load(menuViewController, on: menuContainerView)
+        }
 
         if preferences.basic.position == .under {
             view.bringSubviewToFront(contentContainerView)
@@ -193,6 +197,24 @@ open class SideMenuController: UIViewController {
 
         configureGesturesRecognizer()
         setUpNotifications()
+    }
+    
+    open override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if preferences.basic.addToTabBarController {
+            self.tabBarController?.view.addSubview(menuContainerView)
+            load(menuViewController, on: menuContainerView)
+        }
+    }
+    
+    open override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        if preferences.basic.addToTabBarController {
+            menuContainerView.removeFromSuperview()
+            unload(menuViewController)
+        }
     }
 
     private func resolveDirection(with view: UIView) {
@@ -338,6 +360,11 @@ open class SideMenuController: UIViewController {
         panGesture.delegate = self
         panGestureRecognizer = panGesture
         view.addGestureRecognizer(panGesture)
+        
+        let panGesture2 = UIPanGestureRecognizer(target: self, action: #selector(SideMenuController.handlePanGesture(_:)))
+        panGesture2.delegate = self
+        menuPanGestureRecognizer = panGesture2
+        menuContainerView.addGestureRecognizer(panGesture2)
     }
 
     private func addContentOverlayViewIfNeeded() {
@@ -355,12 +382,20 @@ open class SideMenuController: UIViewController {
             overlay.alpha = 0
         }
 
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(SideMenuController.handlePanGesture(_:)))
+        panGesture.delegate = self
+        overlayPanGestureRecognizer = panGesture
+        overlay.addGestureRecognizer(panGesture)
+        
         // UIKit can coordinate overlay's tap gesture and controller view's pan gesture correctly
         let tapToHideGesture = UITapGestureRecognizer()
         tapToHideGesture.addTarget(self, action: #selector(SideMenuController.handleTapGesture(_:)))
         overlay.addGestureRecognizer(tapToHideGesture)
 
-        contentContainerView.insertSubview(overlay, aboveSubview: contentViewController.view)
+        guard let view = preferences.basic.addToTabBarController ? tabBarController?.view ?? view : view else { return }
+        
+        view.addSubview(overlay)
+        view.bringSubviewToFront(menuContainerView)
         contentContainerOverlay = overlay
         contentContainerOverlay?.accessibilityIdentifier = "ContentShadowOverlay"
     }
@@ -668,6 +703,8 @@ open class SideMenuController: UIViewController {
     // MARK: - Helper Methods
 
     private func sideMenuFrame(visibility: Bool, targetSize: CGSize? = nil) -> CGRect {
+        guard let view = preferences.basic.addToTabBarController ? tabBarController?.view ?? self.view : self.view else { return .zero }
+        
         let position = preferences.basic.position
         switch position {
         case .above, .sideBySide:
@@ -759,7 +796,7 @@ extension SideMenuController: UIGestureRecognizerDelegate {
     }
 
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        if let velocity = panGestureRecognizer?.velocity(in: view) {
+        if let velocity = panGestureRecognizer?.velocity(in: view) ?? menuPanGestureRecognizer?.velocity(in: view) ?? overlayPanGestureRecognizer?.velocity(in: view) {
             return isValidateHorizontalMovement(for: velocity)
         }
         return true
