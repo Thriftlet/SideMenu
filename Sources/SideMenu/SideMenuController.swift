@@ -19,10 +19,7 @@ import UIKit
 open class SideMenuController: UIViewController {
 
     /// Configure this property to change the behavior of SideMenuController;
-    public static var preferences = Preferences()
-    private var preferences: Preferences {
-        return type(of: self).preferences
-    }
+    public var preferences = Preferences()
 
     private lazy var adjustedDirection = Preferences.MenuDirection.left
 
@@ -378,7 +375,7 @@ open class SideMenuController: UIViewController {
         if !shouldShowShadowOnContent {
             overlay.backgroundColor = .clear
         } else {
-            overlay.backgroundColor = SideMenuController.preferences.animation.shadowColor
+            overlay.backgroundColor = preferences.animation.shadowColor
             overlay.alpha = 0
         }
 
