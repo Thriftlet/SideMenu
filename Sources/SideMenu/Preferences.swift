@@ -11,6 +11,8 @@ import UIKit
 extension SideMenuController {
     /// The preferences of side menu controller.
     public struct Preferences {
+        
+        public init() {}
 
         /// The animation that will apply to the status bar when the menu is revealed/hidden.
         ///

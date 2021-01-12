@@ -134,14 +134,21 @@ open class SideMenuController: UIViewController {
     /// - Parameters:
     ///   - contentViewController: the content view controller
     ///   - menuViewController: the menu view controller
-    public convenience init(contentViewController: UIViewController, menuViewController: UIViewController) {
-        self.init(nibName: nil, bundle: nil)
+    ///   - preferences: the preferences
+    public init(contentViewController: UIViewController, menuViewController: UIViewController, preferences: Preferences = Preferences()) {
+        self.preferences = preferences
+        
+        super.init(nibName: nil, bundle: nil)
 
         // Assignment in initializer won't trigger the setter
         self.contentViewController = contentViewController
         self.menuViewController = menuViewController
     }
-
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     deinit {
         unregisterNotifications()
     }
